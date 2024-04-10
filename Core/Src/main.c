@@ -18,10 +18,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -99,6 +100,8 @@ UART_HandleTypeDef huart1;
 	uint8_t BTNcount	= 0;
 	uint8_t T100ms;
 	uint8_t rx[256],ir,iw;
+
+	uint8_t rxUSBData, newData;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -106,37 +109,13 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM1_Init(void);
-
-/**
- * @brief Decodifica las tramas que se reciben
- * La función decodifica el protocolo para saber si lo que llegó es válido.
- * Utiliza una máquina de estado para decodificar el paquete
- */
+/* USER CODE BEGIN PFP */
 void decodeProtocol(_sDato *);
-
-
-/**
- * @brief Procesa el comando (ID) que se recibió
- * Si el protocolo es correcto, se llama a esta función para procesar el comando
- */
 void decodeData(_sDato *);
-
-
-/**
- * @brief Procesa el comando (ID) que se ingresa cómo parámetro
- * En función del ID se arma el payload para enviar
- */
 void encodeData(uint8_t id);
-
-
-/**
- * @brief Envía los datos a la PC
- * La función consulta si el puerto serie está libra para escribir, si es así envía 1 byte y retorna
- */
 void sendData(void);
 
-
-/* USER CODE BEGIN PFP */
+void USBReceive(uint8_t *but, uint16_t len);
 
 /* USER CODE END PFP */
 
@@ -159,6 +138,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 //			datosComProtocol.bufferRx[datosComProtocol.indexWriteRx++]=pcCom.getc();
 //		}
 	}
+}
+
+void USBReceive(uint8_t *buf, uint16_t len){
+	rxUSBData = buf[0];
+	newData = 1;
 }
 
 
@@ -370,6 +354,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_TIM1_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim1);
 
@@ -394,69 +379,18 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  BTNstatus = HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
 
-	  	  if(ir!=iw){
-	  		if (__HAL_UART_GET_FLAG(&huart1,UART_FLAG_TXE)){
-	  			ir = iw-1;
-	  			USART1->DR = rx[ir];
-	  			//HAL_UART_Transmit(&huart1, &rx[ir],1,0);
-	  			ir=iw;
-	  		}
-	  	}
 
-	  	  	  	if(!BTNstatus){
-	  	  	  		BTNcount++;
-	  	  	  		if(BTNcount > 5){
-	  	  	  			BTNcount = 0;
-	  	  	  		}
-	  	  		}
-
-	  	  	  	switch (BTNcount) {
-	  	  			case 1:
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(100);
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(900);
-	  	  				break;
-	  	  			case 2:
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(100);
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(100);
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(100);
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(900);
-	  	  				break;
-	  	  			case 3:
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(100);
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(100);
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(100);
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(100);
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(100);
-	  	  					HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-	  	  					HAL_Delay(900);
-	  	  				break;
-	  	  			case 4:
-	  	  				//if(condition){
-
-	  	  				//}
-	  	  				break;
-	  	  			case 5:
-	  	  				break;
-	  	  			default:
-	  	  				if(BTNcount==5){
-	  	  					  		BTNcount=0;
-	  	  					  	}
-	  	  				break;
-	  	  		}
     /* USER CODE BEGIN 3 */
+
+	  CDC_AttachRxData(USBReceive);
+
+	  if(newData){
+		  if(CDC_Transmit_FS(&rxUSBData, 1) == USBD_OK){
+			  newData = 0;
+		  }
+
+	  }
   }
   /* USER CODE END 3 */
 }
@@ -469,6 +403,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -495,6 +430,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
+  PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
@@ -542,7 +483,7 @@ static void MX_TIM1_Init(void)
   }
   /* USER CODE BEGIN TIM1_Init 2 */
 
-  /* USER CODE END TIM1_Init 2 */
+/* USER CODE END TIM1_Init 2 */
 
 }
 
