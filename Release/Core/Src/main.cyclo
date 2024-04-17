@@ -1,0 +1,10 @@
+../Core/Src/main.c:179:6:USBReceive	2
+../Core/Src/main.c:153:6:HAL_ADC_ConvCpltCallback	1
+../Core/Src/main.c:157:6:HAL_TIM_PeriodElapsedCallback	3
+../Core/Src/main.c:171:6:HAL_UART_RxCpltCallback	2
+../Core/Src/main.c:289:6:decodeData	3
+../Core/Src/main.c:211:6:decodeProtocol	17
+../Core/Src/main.c:323:6:encodeData	3
+../Core/Src/main.c:467:6:SystemClock_Config	4
+../Core/Src/main.c:365:5:main	22
+../Core/Src/main.c:849:6:Error_Handler	1

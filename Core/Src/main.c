@@ -70,6 +70,19 @@ typedef struct{
 _sDato datosComProtocol;
 
 
+typedef struct {
+    uint8_t F10MS: 	1;
+    uint8_t F100MS:	1;
+    uint8_t bit2: 	1;
+    uint8_t bit3: 	1;
+    uint8_t bit4: 	1;
+    uint8_t bit5: 	1;
+    uint8_t bit6: 	1;
+    uint8_t bit7: 	1;
+}_sFlags1;
+
+_sFlags1 flags1;
+
 typedef union {
     int32_t i32;
     uint32_t ui32;
@@ -78,6 +91,7 @@ typedef union {
 }_udat;
 
 _udat myWord;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -104,8 +118,9 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 	uint8_t BTNstatus	= 0;
 	uint8_t BTNcount	= 0;
-	uint8_t T100ms;
-	uint8_t rx[256],ir,iw;
+	uint8_t t100ms;
+
+//	uint8_t rx[256],ir,iw;
 
 	uint8_t rxUSBData, newData;
 
@@ -141,26 +156,35 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim ->Instance == TIM1) {
-		T100ms--;
-	}if(T100ms==0){
-		T100ms=10;
+		t100ms--;
+	}
+	if(t100ms==0){
+		flags1.F100MS = 1;
+		t100ms=10;
 	}
 }
+
+/*=============>Recepción de datos desde USART<=============
+ * Interrupción que es llamada cuando se produce una recepción de datos.
+ * Cargo los datos recibidos al Buffer de Recepción
+ * */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	if(huart ->Instance ==USART1){
-		iw++;
-		HAL_UART_Receive_IT(&huart1, &rx[iw], 1);
+	if(huart ->Instance == USART1){
+//		iw++;
+		HAL_UART_Receive_IT(&huart1, &datosComProtocol.bufferRx[datosComProtocol.indexWriteRx++], 1);
 		//HAL_UART_Receive_IT(&huart1, &rx[iw], 1);
-//		while (pcCom.readable())
-//		{
-//			datosComProtocol.bufferRx[datosComProtocol.indexWriteRx++]=pcCom.getc();
-//		}
 	}
 }
 
 void USBReceive(uint8_t *buf, uint16_t len){
-	rxUSBData = buf[0];
-	newData = 1;
+//	rxUSBData = buf[0];
+//	rxUSBData = len;
+//	newData = 1;
+	for (int i = 0; i < len; ++i) {
+		datosComProtocol.bufferRx[datosComProtocol.indexWriteRx] = buf[i];
+	}
+
+
 }
 
 
@@ -183,14 +207,6 @@ void USBReceive(uint8_t *buf, uint16_t len){
 //TOKEN: ':'
 
 //CKS: xor de todos los bytes enviados menos el CKS
-
-void onDataRx(void)
-{
-    while (pcCom.readable())
-    {
-        datosComProtocol.bufferRx[datosComProtocol.indexWriteRx++]=pcCom.getc();
-    }
-}
 
 void decodeProtocol(_sDato *datosCom){
 	static uint8_t nBytes = 0;
@@ -270,17 +286,15 @@ void decodeProtocol(_sDato *datosCom){
 
 }
 
-
 void decodeData(_sDato *datosCom){
 	#define POSID   2
     #define POSDATA 3
-
 	uint8_t auxBuffTx[50], indiceAux=0, cheksum;
 	auxBuffTx[indiceAux++]='U';
 	auxBuffTx[indiceAux++]='N';
 	auxBuffTx[indiceAux++]='E';
 	auxBuffTx[indiceAux++]='R';
-	auxBuffTx[indiceAux++]=0;
+	auxBuffTx[indiceAux++]= 0;
 	auxBuffTx[indiceAux++]=':';
 
 	switch (datosCom->bufferRx[datosCom->indexStart+POSID]) {
@@ -302,6 +316,7 @@ void decodeData(_sDato *datosCom){
 		datosCom->bufferTx[datosComProtocol.indexWriteTx++]=auxBuffTx[a];
 	}
 		datosCom->bufferTx[datosComProtocol.indexWriteTx++]=cheksum;
+//		CDC_Transmit_FS(datosCom->bufferTx, auxBuffTx[NBYTES]+6);
 
 }
 
@@ -316,12 +331,12 @@ void encodeData(uint8_t id){
 
 	switch (id) {
 	case IR_SENSOR:
-//		auxBuffTx[indiceAux++]=IR_SENSOR;
-//		auxBuffTx[NBYTES]=0x06;
-//
+		auxBuffTx[indiceAux++]=IR_SENSOR;
+		auxBuffTx[NBYTES]=0x04;
+
 //		myWord.ui32 = sensorIR.valueIRIzq;
-//		auxBuffTx[indiceAux++] = myWord.ui8[0];
-//		auxBuffTx[indiceAux++] = myWord.ui8[1];
+		auxBuffTx[indiceAux++] = 0x99;
+		auxBuffTx[indiceAux++] = 0x99;
 //
 //		myWord.ui32 = sensorIR.valueIRDer;
 //		auxBuffTx[indiceAux++] = myWord.ui8[0];
@@ -341,13 +356,6 @@ void encodeData(uint8_t id){
 		datosComProtocol.bufferTx[datosComProtocol.indexWriteTx++]=cheksum;
 }
 
-void sendData(void){
-
-//	if(pcCom.writable())
-//	{
-//		pcCom.putc(datosComProtocol.bufferTx[datosComProtocol.indexReadTx++]);
-//	}
-}
 /* USER CODE END 0 */
 
 /**
@@ -356,6 +364,7 @@ void sendData(void){
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -389,9 +398,13 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim1);
   CDC_AttachRxData(USBReceive);
 
-  ir=0,iw=0;
+  datosComProtocol.indexWriteRx = 0;		//Init indice recepión del Buffer de Recepción
+  datosComProtocol.indexReadRx = 0;			//Init indice de lectura del Buffer de Recepción
+  datosComProtocol.indexWriteTx = 0;
+  datosComProtocol.indexReadTx = 0;
+//  ir=0,iw=0;
 
-  HAL_UART_Receive_IT(&huart1, &rx[iw], 1);
+  HAL_UART_Receive_IT(&huart1, &datosComProtocol.bufferRx[datosComProtocol.indexWriteRx], 1);
 
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)bufADC, 8);
 
@@ -399,16 +412,20 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
+  HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 0);
   HAL_Delay(100);
-  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
+  HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 1);
   HAL_Delay(100);
-  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
+  HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 0);
   HAL_Delay(100);
-  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
+  HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 1);
   HAL_Delay(100);
-  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
+  HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 0);
+  HAL_Delay(100);
+  HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 1);
+
+//  uint8_t transComplete  = 0;
+
 
   while (1)
   {
@@ -416,11 +433,28 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  if(newData){
-		  if(CDC_Transmit_FS(&rxUSBData, 1) == USBD_OK){
-			  newData = 0;
-		  }
+	  if(flags1.F100MS==1){
+		  flags1.F100MS = 0;
+		  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
+		  encodeData(IR_SENSOR);
+	  }
 
+
+//	  if(newData){
+//		  if(CDC_Transmit_FS(&rxUSBData, 1) == USBD_OK){
+//			  newData = 0;
+//		  }
+//	  }
+
+	  if(datosComProtocol.indexReadRx != datosComProtocol.indexWriteRx){
+		  decodeProtocol(&datosComProtocol);
+	  }
+
+	  if(datosComProtocol.indexReadTx != datosComProtocol.indexWriteTx){
+//		  CDC_Transmit_FS(&datosComProtocol.bufferTx[datosComProtocol.indexReadTx++], 1);
+		  if (huart1.gState == HAL_UART_STATE_READY) {
+			  HAL_UART_Transmit_IT(&huart1, &datosComProtocol.bufferTx[datosComProtocol.indexReadTx++], 1);
+		}
 	  }
   }
   /* USER CODE END 3 */

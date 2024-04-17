@@ -1,0 +1,10 @@
+../Core/Src/main.c:179:6:USBReceive	8	static
+../Core/Src/main.c:153:6:HAL_ADC_ConvCpltCallback	0	static
+../Core/Src/main.c:157:6:HAL_TIM_PeriodElapsedCallback	0	static
+../Core/Src/main.c:171:6:HAL_UART_RxCpltCallback	0	static
+../Core/Src/main.c:289:6:decodeData	80	static
+../Core/Src/main.c:211:6:decodeProtocol	16	static
+../Core/Src/main.c:323:6:encodeData	80	static
+../Core/Src/main.c:467:6:SystemClock_Config	88	static,ignoring_inline_asm
+../Core/Src/main.c:365:5:main	56	static,ignoring_inline_asm
+../Core/Src/main.c:849:6:Error_Handler	0	static,ignoring_inline_asm
