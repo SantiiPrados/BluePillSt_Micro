@@ -73,8 +73,8 @@ _sDato datosComProtocol;
 typedef struct {
     uint8_t F10MS: 	1;
     uint8_t F100MS:	1;
-    uint8_t bit2: 	1;
-    uint8_t bit3: 	1;
+    uint8_t F500MS:	1;
+    uint8_t F250US: 1;
     uint8_t bit4: 	1;
     uint8_t bit5: 	1;
     uint8_t bit6: 	1;
@@ -82,6 +82,20 @@ typedef struct {
 }_sFlags1;
 
 _sFlags1 flags1;
+
+typedef struct{
+	uint16_t sensor0;
+	uint16_t sensor1;
+	uint16_t sensor2;
+	uint16_t sensor3;
+	uint16_t sensor4;
+	uint16_t sensor5;
+	uint16_t sensor6;
+	uint16_t sensor7;
+	uint16_t sensor8;
+}_sIR;
+
+_sIR ir;	//genero un array de mi struct para tener un historial ciclico de lecturas del censor IR
 
 typedef union {
     int32_t i32;
@@ -119,6 +133,7 @@ UART_HandleTypeDef huart1;
 	uint8_t BTNstatus	= 0;
 	uint8_t BTNcount	= 0;
 	uint8_t t100ms;
+	uint8_t t500ms, lastIR = 0;
 
 //	uint8_t rx[256],ir,iw;
 
@@ -151,16 +166,44 @@ void USBReceive(uint8_t *but, uint16_t len);
 /* USER CODE BEGIN 0 */
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+//	HAL_ADC_GetValue(hadc);
+	ir.sensor0 = bufADC[0];
+	ir.sensor1 = bufADC[1];
+	ir.sensor2 = bufADC[2];
+	ir.sensor3 = bufADC[3];
+	ir.sensor4 = bufADC[4];
+	ir.sensor5 = bufADC[5];
+	ir.sensor6 = bufADC[6];
+	ir.sensor7 = bufADC[7];
+
+//	ir.sensor0[lastIR] = bufADC[0];//buffer circular para la lectura de datos de los sensores IR
+//	ir.sensor1[lastIR] = bufADC[1];
+//	ir.sensor2[lastIR] = bufADC[2];
+//	ir.sensor3[lastIR] = bufADC[3];
+//	ir.sensor4[lastIR] = bufADC[4];
+//	ir.sensor5[lastIR] = bufADC[5];
+//	ir.sensor6[lastIR] = bufADC[6];
+//	ir.sensor7[lastIR] = bufADC[7];
+//	if (lastIR == 63){
+//		lastIR = 0;
+//	}else{
+//		lastIR++;
+//	}
 
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim ->Instance == TIM1) {
 		t100ms--;
+		t500ms--;
 	}
 	if(t100ms==0){
 		flags1.F100MS = 1;
 		t100ms=10;
+	}
+	if(t500ms==0){
+		flags1.F500MS = 1;
+		t500ms=50;
 	}
 }
 
@@ -332,15 +375,40 @@ void encodeData(uint8_t id){
 	switch (id) {
 	case IR_SENSOR:
 		auxBuffTx[indiceAux++]=IR_SENSOR;
-		auxBuffTx[NBYTES]=0x04;
+		auxBuffTx[NBYTES]=0x12; //decimal= 18
 
-//		myWord.ui32 = sensorIR.valueIRIzq;
-		auxBuffTx[indiceAux++] = 0x99;
-		auxBuffTx[indiceAux++] = 0x99;
-//
-//		myWord.ui32 = sensorIR.valueIRDer;
-//		auxBuffTx[indiceAux++] = myWord.ui8[0];
-//		auxBuffTx[indiceAux++] = myWord.ui8[1];
+		myWord.ui16[0] = ir.sensor0;
+		auxBuffTx[indiceAux++] = myWord.ui8[0];
+		auxBuffTx[indiceAux++] = myWord.ui8[1];
+
+		myWord.ui16[0] = ir.sensor1;
+		auxBuffTx[indiceAux++] = myWord.ui8[0];
+		auxBuffTx[indiceAux++] = myWord.ui8[1];
+
+		myWord.ui16[0] = ir.sensor2;
+		auxBuffTx[indiceAux++] = myWord.ui8[0];
+		auxBuffTx[indiceAux++] = myWord.ui8[1];
+
+		myWord.ui16[0] = ir.sensor3;
+		auxBuffTx[indiceAux++] = myWord.ui8[0];
+		auxBuffTx[indiceAux++] = myWord.ui8[1];
+
+		myWord.ui16[0] = ir.sensor4;
+		auxBuffTx[indiceAux++] = myWord.ui8[0];
+		auxBuffTx[indiceAux++] = myWord.ui8[1];
+
+		myWord.ui16[0] = ir.sensor5;
+		auxBuffTx[indiceAux++] = myWord.ui8[0];
+		auxBuffTx[indiceAux++] = myWord.ui8[1];
+
+		myWord.ui16[0] = ir.sensor6;
+		auxBuffTx[indiceAux++] = myWord.ui8[0];
+		auxBuffTx[indiceAux++] = myWord.ui8[1];
+
+		myWord.ui16[0] = ir.sensor7;
+		auxBuffTx[indiceAux++] = myWord.ui8[0];
+		auxBuffTx[indiceAux++] = myWord.ui8[1];
+
 		break;
 		default:
 			auxBuffTx[indiceAux++]=0xDD;
@@ -432,12 +500,20 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+//	  if (flags1.F250US==1) {
+//		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)bufADC, 8);
+//	}
 
 	  if(flags1.F100MS==1){
 		  flags1.F100MS = 0;
 		  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-		  encodeData(IR_SENSOR);
+		  //HAL_ADC_Start_DMA(&hadc1, (uint32_t *)bufADC, 8);
 	  }
+
+	  if (flags1.F500MS==1) {
+		  flags1.F500MS = 0;
+		  encodeData(IR_SENSOR);
+	}
 
 
 //	  if(newData){
@@ -451,10 +527,14 @@ int main(void)
 	  }
 
 	  if(datosComProtocol.indexReadTx != datosComProtocol.indexWriteTx){
-//		  CDC_Transmit_FS(&datosComProtocol.bufferTx[datosComProtocol.indexReadTx++], 1);
-		  if (huart1.gState == HAL_UART_STATE_READY) {
-			  HAL_UART_Transmit_IT(&huart1, &datosComProtocol.bufferTx[datosComProtocol.indexReadTx++], 1);
-		}
+
+		  if((CDC_Transmit_FS(&datosComProtocol.bufferTx[datosComProtocol.indexReadTx], 1) == USBD_OK)){
+			  datosComProtocol.indexReadTx++;
+		  }
+
+//		  if (huart1.gState == HAL_UART_STATE_READY) {
+//			  HAL_UART_Transmit_IT(&huart1, &datosComProtocol.bufferTx[datosComProtocol.indexReadTx++], 1);
+//		}
 	  }
   }
   /* USER CODE END 3 */
