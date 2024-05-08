@@ -494,6 +494,7 @@ int main(void)
 
 //  uint8_t transComplete  = 0;
 
+  uint8_t lengthTx;
 
   while (1)
   {
@@ -527,8 +528,8 @@ int main(void)
 	  }
 
 	  if(datosComProtocol.indexReadTx != datosComProtocol.indexWriteTx){
-
-		  if((CDC_Transmit_FS(&datosComProtocol.bufferTx[datosComProtocol.indexReadTx], 1) == USBD_OK)){
+		  lengthTx = datosComProtocol.indexWriteTx - datosComProtocol.indexReadTx;
+		  if((CDC_Transmit_FS(&datosComProtocol.bufferTx[datosComProtocol.indexReadTx], lengthTx) == USBD_OK)){
 			  datosComProtocol.indexReadTx++;
 		  }
 

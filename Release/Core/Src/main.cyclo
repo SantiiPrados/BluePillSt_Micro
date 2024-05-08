@@ -5,6 +5,6 @@
 ../Core/Src/main.c:332:6:decodeData	3
 ../Core/Src/main.c:254:6:decodeProtocol	17
 ../Core/Src/main.c:366:6:encodeData	3
-../Core/Src/main.c:547:6:SystemClock_Config	4
+../Core/Src/main.c:548:6:SystemClock_Config	4
 ../Core/Src/main.c:433:5:main	23
-../Core/Src/main.c:929:6:Error_Handler	1
+../Core/Src/main.c:930:6:Error_Handler	1
