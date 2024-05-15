@@ -132,8 +132,8 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 	uint8_t BTNstatus	= 0;
 	uint8_t BTNcount	= 0;
-	uint8_t t100ms;
-	uint8_t t500ms, lastIR = 0;
+	uint8_t t100ms	= 10;
+	uint8_t t500ms = 255, lastIR = 0;
 
 //	uint8_t rx[256],ir,iw;
 
@@ -203,7 +203,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	}
 	if(t500ms==0){
 		flags1.F500MS = 1;
-		t500ms=50;
+		t500ms=255;
 	}
 }
 
@@ -378,34 +378,42 @@ void encodeData(uint8_t id){
 		auxBuffTx[NBYTES]=0x12; //decimal= 18
 
 		myWord.ui16[0] = ir.sensor0;
+		//myWord.ui32 = ir.sensor0;
 		auxBuffTx[indiceAux++] = myWord.ui8[0];
 		auxBuffTx[indiceAux++] = myWord.ui8[1];
 
 		myWord.ui16[0] = ir.sensor1;
+		//myWord.ui32 = ir.sensor1;
 		auxBuffTx[indiceAux++] = myWord.ui8[0];
 		auxBuffTx[indiceAux++] = myWord.ui8[1];
 
 		myWord.ui16[0] = ir.sensor2;
+		//myWord.ui32 = ir.sensor2;
 		auxBuffTx[indiceAux++] = myWord.ui8[0];
 		auxBuffTx[indiceAux++] = myWord.ui8[1];
 
 		myWord.ui16[0] = ir.sensor3;
+		//myWord.ui32 = ir.sensor3;
 		auxBuffTx[indiceAux++] = myWord.ui8[0];
 		auxBuffTx[indiceAux++] = myWord.ui8[1];
 
 		myWord.ui16[0] = ir.sensor4;
+		//myWord.ui32 = ir.sensor4;
 		auxBuffTx[indiceAux++] = myWord.ui8[0];
 		auxBuffTx[indiceAux++] = myWord.ui8[1];
 
 		myWord.ui16[0] = ir.sensor5;
+		//myWord.ui32 = ir.sensor5;
 		auxBuffTx[indiceAux++] = myWord.ui8[0];
 		auxBuffTx[indiceAux++] = myWord.ui8[1];
 
 		myWord.ui16[0] = ir.sensor6;
+		//myWord.ui32 = ir.sensor6;
 		auxBuffTx[indiceAux++] = myWord.ui8[0];
 		auxBuffTx[indiceAux++] = myWord.ui8[1];
 
 		myWord.ui16[0] = ir.sensor7;
+		//myWord.ui32 = ir.sensor7;
 		auxBuffTx[indiceAux++] = myWord.ui8[0];
 		auxBuffTx[indiceAux++] = myWord.ui8[1];
 
@@ -481,40 +489,41 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 0);
-  HAL_Delay(100);
+  HAL_Delay(300);
   HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 1);
-  HAL_Delay(100);
+  HAL_Delay(300);
   HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 0);
-  HAL_Delay(100);
+  HAL_Delay(300);
   HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 1);
-  HAL_Delay(100);
+  HAL_Delay(300);
   HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 0);
-  HAL_Delay(100);
+  HAL_Delay(300);
   HAL_GPIO_WritePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin, 1);
 
 //  uint8_t transComplete  = 0;
 
-  uint8_t lengthTx;
+//  uint8_t lengthTx;
 
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  if (flags1.F250US==1) {
+//	  if (flags1.  b==1) {
 //		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)bufADC, 8);
 //	}
 
 	  if(flags1.F100MS==1){
 		  flags1.F100MS = 0;
 		  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
-		  //HAL_ADC_Start_DMA(&hadc1, (uint32_t *)bufADC, 8);
+//		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)bufADC, 8);
 	  }
 
-	  if (flags1.F500MS==1) {
+	  if (flags1.F500MS == 1) {
 		  flags1.F500MS = 0;
 		  encodeData(IR_SENSOR);
 	}
+
 
 
 //	  if(newData){
@@ -527,17 +536,18 @@ int main(void)
 		  decodeProtocol(&datosComProtocol);
 	  }
 
-	  if(datosComProtocol.indexReadTx != datosComProtocol.indexWriteTx){
-		  lengthTx = datosComProtocol.indexWriteTx - datosComProtocol.indexReadTx;
-		  if((CDC_Transmit_FS(&datosComProtocol.bufferTx[datosComProtocol.indexReadTx], lengthTx) == USBD_OK)){
-			  datosComProtocol.indexReadTx++;
-		  }
+//	  if(datosComProtocol.indexReadTx != datosComProtocol.indexWriteTx){
+//		  lengthTx = datosComProtocol.indexWriteTx - datosComProtocol.indexReadTx;
+//		  if((CDC_Transmit_FS(&datosComProtocol.bufferTx[datosComProtocol.indexReadTx], lengthTx) == USBD_OK))
+//			  datosComProtocol.indexReadTx++;
+//	  }
 
-//		  if (huart1.gState == HAL_UART_STATE_READY) {
-//			  HAL_UART_Transmit_IT(&huart1, &datosComProtocol.bufferTx[datosComProtocol.indexReadTx++], 1);
-//		}
+	  if (huart1.gState == HAL_UART_STATE_READY) {
+		  HAL_UART_Transmit_IT(&huart1, &datosComProtocol.bufferTx[datosComProtocol.indexReadTx++], 1);
 	  }
+
   }
+}
   /* USER CODE END 3 */
 }
 
@@ -753,7 +763,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 71;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 10000;
+  htim1.Init.Period = 249;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
