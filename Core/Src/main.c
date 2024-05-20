@@ -71,10 +71,10 @@ _sDato datosComProtocol;
 
 
 typedef struct {
+	uint8_t F250US: 1;
     uint8_t F10MS: 	1;
     uint8_t F100MS:	1;
     uint8_t F500MS:	1;
-    uint8_t F250US: 1;
     uint8_t bit4: 	1;
     uint8_t bit5: 	1;
     uint8_t bit6: 	1;
@@ -110,6 +110,9 @@ _udat myWord;
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define TIME10ms		40
+#define TIME100ms		10
+#define TIME500ms		50
 
 /* USER CODE END PD */
 
@@ -132,8 +135,10 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 	uint8_t BTNstatus	= 0;
 	uint8_t BTNcount	= 0;
-	uint8_t t100ms	= 10;
-	uint8_t t500ms = 255, lastIR = 0;
+	uint8_t t10ms	= TIME10ms;
+	uint8_t t100ms 	= TIME100ms;
+	uint8_t t500ms 	= TIME500ms;
+	uint8_t lastIR 	= 0;
 
 //	uint8_t rx[256],ir,iw;
 
@@ -147,10 +152,10 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
-static void MX_TIM1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 void onDataRx(void);
 void decodeProtocol(_sDato *);
@@ -193,17 +198,28 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	if (htim ->Instance == TIM1) {
-		t100ms--;
-		t500ms--;
-	}
-	if(t100ms==0){
-		flags1.F100MS = 1;
-		t100ms=10;
-	}
-	if(t500ms==0){
-		flags1.F500MS = 1;
-		t500ms=255;
+	if (htim ->Instance == TIM1) {	//Entra cada 250us, 1ms= x4, 10ms= x40, 100ms= x400
+		flags1.F250US = 1;
+
+		t10ms--;
+
+		if(t10ms == 0){
+			flags1.F10MS = 1;
+			t10ms = TIME10ms;
+
+			t100ms--;
+			t500ms--;
+		}
+
+		if(t100ms == 0){
+			flags1.F100MS = 1;
+			t100ms=TIME100ms;
+		}
+
+		if(t500ms == 0){
+			flags1.F500MS = 1;
+			t500ms=TIME500ms;
+		}
 	}
 }
 
@@ -465,11 +481,11 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_USART1_UART_Init();
-  MX_TIM1_Init();
   MX_USB_DEVICE_Init();
   MX_ADC1_Init();
   MX_I2C2_Init();
   MX_TIM4_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim1);
   CDC_AttachRxData(USBReceive);
@@ -502,27 +518,28 @@ int main(void)
 
 //  uint8_t transComplete  = 0;
 
-//  uint8_t lengthTx;
+  uint8_t lengthTx;
 
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  if (flags1.  b==1) {
+	  if (flags1.F250US == 1){
+		  flags1.F250US = 0;
 //		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)bufADC, 8);
-//	}
+	  }
 
 	  if(flags1.F100MS==1){
 		  flags1.F100MS = 0;
-		  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
 //		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)bufADC, 8);
 	  }
 
 	  if (flags1.F500MS == 1) {
 		  flags1.F500MS = 0;
+		  HAL_GPIO_TogglePin(LedBuidIn_GPIO_Port, LedBuidIn_Pin);
 		  encodeData(IR_SENSOR);
-	}
+	  }
 
 
 
@@ -536,20 +553,20 @@ int main(void)
 		  decodeProtocol(&datosComProtocol);
 	  }
 
-//	  if(datosComProtocol.indexReadTx != datosComProtocol.indexWriteTx){
-//		  lengthTx = datosComProtocol.indexWriteTx - datosComProtocol.indexReadTx;
-//		  if((CDC_Transmit_FS(&datosComProtocol.bufferTx[datosComProtocol.indexReadTx], lengthTx) == USBD_OK))
-//			  datosComProtocol.indexReadTx++;
-//	  }
-
-	  if (huart1.gState == HAL_UART_STATE_READY) {
-		  HAL_UART_Transmit_IT(&huart1, &datosComProtocol.bufferTx[datosComProtocol.indexReadTx++], 1);
+	  if(datosComProtocol.indexReadTx != datosComProtocol.indexWriteTx){
+		  lengthTx = datosComProtocol.indexWriteTx - datosComProtocol.indexReadTx;
+		  if((CDC_Transmit_FS(&datosComProtocol.bufferTx[datosComProtocol.indexReadTx], lengthTx) == USBD_OK))
+			  datosComProtocol.indexReadTx++;
 	  }
+
+//	  if (huart1.gState == HAL_UART_STATE_READY) {
+//		  HAL_UART_Transmit_IT(&huart1, &datosComProtocol.bufferTx[datosComProtocol.indexReadTx++], 1);
+//	  }
 
   }
 }
   /* USER CODE END 3 */
-}
+
 
 /**
   * @brief System Clock Configuration

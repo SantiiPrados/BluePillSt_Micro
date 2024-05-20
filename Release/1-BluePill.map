@@ -73,7 +73,7 @@ Discarded input sections
  .text.HAL_I2C_MspDeInit
                 0x00000000       0x3c ./Core/Src/stm32f1xx_hal_msp.o
  .text.HAL_TIM_Base_MspDeInit
-                0x00000000       0x38 ./Core/Src/stm32f1xx_hal_msp.o
+                0x00000000       0x34 ./Core/Src/stm32f1xx_hal_msp.o
  .text.HAL_UART_MspDeInit
                 0x00000000       0x38 ./Core/Src/stm32f1xx_hal_msp.o
  .text          0x00000000        0x0 ./Core/Src/stm32f1xx_it.o
@@ -1432,27 +1432,27 @@ LOAD D:/Programs/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.m
                 0x08000178       0x30 ./Core/Src/main.o
                 0x08000178                HAL_ADC_ConvCpltCallback
  .text.HAL_TIM_PeriodElapsedCallback
-                0x080001a8       0x50 ./Core/Src/main.o
+                0x080001a8       0x58 ./Core/Src/main.o
                 0x080001a8                HAL_TIM_PeriodElapsedCallback
  .text.HAL_UART_RxCpltCallback
-                0x080001f8       0x2c ./Core/Src/main.o
-                0x080001f8                HAL_UART_RxCpltCallback
+                0x08000200       0x2c ./Core/Src/main.o
+                0x08000200                HAL_UART_RxCpltCallback
  .text.decodeData
-                0x08000224       0x78 ./Core/Src/main.o
-                0x08000224                decodeData
+                0x0800022c       0x78 ./Core/Src/main.o
+                0x0800022c                decodeData
  .text.decodeProtocol
-                0x0800029c       0xd8 ./Core/Src/main.o
-                0x0800029c                decodeProtocol
+                0x080002a4       0xd8 ./Core/Src/main.o
+                0x080002a4                decodeProtocol
  .text.encodeData
-                0x08000374       0xf0 ./Core/Src/main.o
-                0x08000374                encodeData
+                0x0800037c       0xf0 ./Core/Src/main.o
+                0x0800037c                encodeData
  .text.SystemClock_Config
-                0x08000464       0x82 ./Core/Src/main.o
-                0x08000464                SystemClock_Config
- *fill*         0x080004e6        0x2 
+                0x0800046c       0x82 ./Core/Src/main.o
+                0x0800046c                SystemClock_Config
+ *fill*         0x080004ee        0x2 
  .text.startup.main
-                0x080004e8      0x400 ./Core/Src/main.o
-                0x080004e8                main
+                0x080004f0      0x3f8 ./Core/Src/main.o
+                0x080004f0                main
  .text.Error_Handler
                 0x080008e8        0x4 ./Core/Src/main.o
                 0x080008e8                Error_Handler
@@ -1504,9 +1504,9 @@ LOAD D:/Programs/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.m
  .text.USB_LP_CAN1_RX0_IRQHandler
                 0x08000b30        0xc ./Core/Src/stm32f1xx_it.o
                 0x08000b30                USB_LP_CAN1_RX0_IRQHandler
- .text.TIM1_UP_IRQHandler
+ .text.TIM2_IRQHandler
                 0x08000b3c        0xc ./Core/Src/stm32f1xx_it.o
-                0x08000b3c                TIM1_UP_IRQHandler
+                0x08000b3c                TIM2_IRQHandler
  .text.USART1_IRQHandler
                 0x08000b48        0xc ./Core/Src/stm32f1xx_it.o
                 0x08000b48                USART1_IRQHandler
@@ -1548,8 +1548,8 @@ LOAD D:/Programs/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.m
                 0x08000ba0                EXTI4_IRQHandler
                 0x08000ba0                USB_HP_CAN1_TX_IRQHandler
                 0x08000ba0                DMA1_Channel3_IRQHandler
+                0x08000ba0                TIM1_UP_IRQHandler
                 0x08000ba0                WWDG_IRQHandler
-                0x08000ba0                TIM2_IRQHandler
                 0x08000ba0                TIM1_BRK_IRQHandler
                 0x08000ba0                EXTI1_IRQHandler
                 0x08000ba0                USART2_IRQHandler
@@ -2151,7 +2151,9 @@ LOAD D:/Programs/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.m
                 0x20000000                t500ms
  .data.t100ms   0x20000001        0x1 ./Core/Src/main.o
                 0x20000001                t100ms
- *fill*         0x20000002        0x2 
+ .data.t10ms    0x20000002        0x1 ./Core/Src/main.o
+                0x20000002                t10ms
+ *fill*         0x20000003        0x1 
  .data.SystemCoreClock
                 0x20000004        0x4 ./Core/Src/system_stm32f1xx.o
                 0x20000004                SystemCoreClock
@@ -2220,8 +2222,8 @@ LOAD D:/Programs/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.m
                 0x200001b0                huart1
  .bss.htim4     0x200001f8       0x48 ./Core/Src/main.o
                 0x200001f8                htim4
- .bss.htim1     0x20000240       0x48 ./Core/Src/main.o
-                0x20000240                htim1
+ .bss.htim2     0x20000240       0x48 ./Core/Src/main.o
+                0x20000240                htim2
  .bss.hi2c2     0x20000288       0x54 ./Core/Src/main.o
                 0x20000288                hi2c2
  .bss.hdma_adc1
