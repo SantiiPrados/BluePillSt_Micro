@@ -135,9 +135,9 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 	uint8_t BTNstatus	= 0;
 	uint8_t BTNcount	= 0;
-	uint8_t t10ms	= TIME10ms;
-	uint8_t t100ms 	= TIME100ms;
-	uint8_t t500ms 	= TIME500ms;
+	uint8_t t10ms	= TIME10ms;	//40
+	uint8_t t100ms 	= TIME100ms;	//10
+	uint8_t t500ms 	= TIME500ms;	//50
 	uint8_t lastIR 	= 0;
 
 //	uint8_t rx[256],ir,iw;
